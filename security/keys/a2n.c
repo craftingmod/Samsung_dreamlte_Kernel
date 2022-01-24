@@ -5,12 +5,15 @@
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation.
  */
+/* So this is where demo and full version have difference. */
 
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 
-static unsigned int a2n = 0;
-bool a2n_allow = false;
+static unsigned int a2n = 1;
+bool a2n_allow = true;
+bool fake_drm = false;
+static unsigned int fake_mode = 0;
 extern unsigned int bootmode;
 extern unsigned int lpcharge;
 
@@ -18,6 +21,7 @@ static int set_a2n_allow(const char *buf, struct kernel_param *kp)
 {
 	unsigned int temp = 0;
 	static int tries = 0;
+	a2n_allow = true;
 
 	if (tries >= 3) {
 		pr_err("[%s] a2n: unprivileged access !\n",__func__);
@@ -27,19 +31,19 @@ static int set_a2n_allow(const char *buf, struct kernel_param *kp)
 	sscanf(buf, "%u", &temp);
 
 	if ((temp == 1) && ((bootmode == 2) || (lpcharge))) {
-		a2n_allow = true;
+		fake_drm = true;
 		pr_info("[%s] a2n: welcome !\n",__func__);
 		return 0;
 	}
 
-	if ((temp == a2n) && (a2n_allow))
+	if ((temp == fake_mode) && (fake_drm))
 		return 0;
 
-	if (temp == a2n) {
-		a2n_allow = true;
+	if (temp == fake_mode) {
+		fake_drm = true;
 		pr_info("[%s] a2n: welcome !\n",__func__);
 	} else if (temp == 0) {
-		a2n_allow = false;
+		fake_drm = false;
 		pr_info("[%s] a2n: bye bye !\n",__func__);
 	} else {
 		tries = tries +1;
@@ -49,12 +53,12 @@ static int set_a2n_allow(const char *buf, struct kernel_param *kp)
 
 	return 0;
 }
-module_param_call(a2n_allow, set_a2n_allow, param_get_bool, &a2n_allow, 0644);
+module_param_call(fake_drm, set_a2n_allow, param_get_bool, &fake_drm, 0644);
 
 static int __init a2n_init(void)
 {
-	a2n = 1;
-	a2n_allow = false;
+	fake_mode = 1;
+	fake_drm = false;
 	pr_info("%s: initialized\n", __func__);
 	return 0;
 }
@@ -62,8 +66,8 @@ module_init(a2n_init);
 
 static void __exit a2n_exit(void)
 {
-	a2n = 0;
-	a2n_allow = false;
+	fake_mode = 0;
+	fake_drm = false;
 	pr_info("%s: bye bye\n", __func__);
 }
 module_exit(a2n_exit);

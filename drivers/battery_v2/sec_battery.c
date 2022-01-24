@@ -58,7 +58,7 @@ static unsigned int input_volt = 0;
 static int charging_curr = 0;
 static int batt_temp = 0;
 #if defined(CONFIG_CCIC_WATER_DETECT)
-bool water_detect = true;
+bool water_detect = false;
 #endif
 static bool is_charger = false;
 static bool afc_init = false;
@@ -1377,7 +1377,7 @@ static ssize_t water_detection_store(struct kobject *kobj,
 #endif
 
 	if (sysfs_streq(buf, "true") || sysfs_streq(buf, "1")) {
-		water_detect = true;
+		water_detect = false;
 		goto out;
 	}
 
